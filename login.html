@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Registro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="login-styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="container-form">
+            <form class="sign-in" method="POST" action="login_procesar.php">
+                <h2>Iniciar sesión</h2>
+                <span>Usa tu usuario y contraseña</span>
+                <div class="container-input">
+                    <i class="fa fa-user"></i>
+                    <input type="text" name="usuario" placeholder="Usuario" required>
+                </div>
+                <div class="container-input">
+                    <i class="fa fa-lock"></i>
+                    <input type="password" name="contrasena" placeholder="Contraseña" required>
+                </div>
+                <button class="button" type="submit">Iniciar sesión</button>
+            </form>
+        </div>
+        <div class="container-form">
+            <form class="sign-up" method="POST" action="registro_procesar.php">
+                <h2>Registrarse</h2>
+                <span>Usa tus datos para registrarte</span>
+                <div class="container-input">
+                    <i class="fa fa-user"></i>
+                    <input type="text" name="nombre" placeholder="Nombre" required>
+                </div>
+                <div class="container-input">
+                    <i class="fa fa-user-circle"></i>
+                    <input type="text" name="usuario" placeholder="Usuario" required>
+                </div>
+                <div class="container-input">
+                    <i class="fa fa-envelope"></i>
+                    <input type="email" name="email" placeholder="Correo electrónico" required>
+                </div>
+                <div class="container-input">
+                    <i class="fa fa-lock"></i>
+                    <input type="password" name="contrasena" placeholder="Contraseña" required>
+                </div>
+                <button class="button" type="submit">Registrarse</button>
+            </form>
+        </div>
+        <div class="conatiner-welcome">
+            <div class="welcome-sign-up welcome">
+                <h3>Bienvenido</h3>
+                <p>Ingresa tus datos personales para usar todas las funciones de la página</p>
+                <button class="button" id="btn-sign-up">Registrarse</button>
+            </div>
+            <div class="welcome-sign-in welcome">
+                <h3>Hola</h3>
+                <p>Inicia sesión con tu usuario y contraseña para acceder a todas las funciones</p>
+                <button class="button" id="btn-sign-in">Iniciar sesión</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    const container = document.querySelector(".container");
+    const btnsignin = document.getElementById("btn-sign-in");
+    const btnsigup = document.getElementById("btn-sign-up");
+    btnsignin.addEventListener("click",()=>{
+        container.classList.remove("toggle");
+    });
+    btnsigup.addEventListener("click",()=>{
+        container.classList.add("toggle")
+    });
+    </script>
+</body>
+</html> 
