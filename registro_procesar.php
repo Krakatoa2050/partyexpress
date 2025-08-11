@@ -6,6 +6,7 @@ $nombre = $_POST['nombre'] ?? '';
 $usuario = $_POST['usuario'] ?? '';
 $email = $_POST['email'] ?? '';
 $contrasena = $_POST['contrasena'] ?? '';
+$redirect = $_POST['redirect'] ?? '';
 
 // Validar que no estén vacíos
 if ($nombre && $usuario && $email && $contrasena) {
@@ -20,7 +21,8 @@ if ($nombre && $usuario && $email && $contrasena) {
             throw new Exception('Error en bind_param: ' . $stmt->error);
         }
         if ($stmt->execute()) {
-            echo '<script>alert("Registro exitoso. Ahora puedes iniciar sesión."); window.location="login.html";</script>';
+            $redir = 'login.html' . ($redirect ? ('?redirect=' . urlencode($redirect)) : '');
+            echo '<script>alert("Registro exitoso. Ahora puedes iniciar sesión."); window.location="' . $redir . '";</script>';
         } else {
             throw new Exception('Error en execute: ' . $stmt->error);
         }

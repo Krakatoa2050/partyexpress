@@ -4,6 +4,7 @@ require_once 'conexion.php';
 
 $usuario = $_POST['usuario'] ?? '';
 $contrasena = $_POST['contrasena'] ?? '';
+$redirect = $_POST['redirect'] ?? '';
 
 if ($usuario && $contrasena) {
     $conn = obtenerConexion();
@@ -17,7 +18,11 @@ if ($usuario && $contrasena) {
         if (password_verify($contrasena, $hash)) {
             $_SESSION['usuario_id'] = $id;
             $_SESSION['usuario'] = $usuario;
-            header('Location: index.php');
+            if ($redirect) {
+                header('Location: ' . $redirect);
+            } else {
+                header('Location: index.php');
+            }
             exit();
         } else {
             echo '<script>alert("Contraseña incorrecta."); window.location="login.html";</script>';

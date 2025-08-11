@@ -20,7 +20,7 @@ session_start();
             <li><a href="#">Fiestas</a></li>
             <li><a href="#">Lugares</a></li>
             <li><a href="#">Organizar fiesta</a></li>
-            <li><a href="#">Contacto</a></li>
+            <li><a href="contacto.php">Contacto</a></li>
         </ul>
         <span class="usuario-menu-container">
             <?php if (isset($_SESSION['usuario'])): ?>
@@ -79,7 +79,11 @@ session_start();
     </section>
     
     <section class="organiza-section">
-        <a href="organizar.php" class="organiza-btn">+ Organiza tu propia fiesta</a>
+        <?php if (isset($_SESSION['usuario_id'])): ?>
+            <a href="organizar.php" class="organiza-btn">+ Organiza tu propia fiesta</a>
+        <?php else: ?>
+            <a href="login.html?redirect=<?php echo urlencode('organizar.php'); ?>" class="organiza-btn">+ Organiza tu propia fiesta</a>
+        <?php endif; ?>
     </section>
     
     <script>

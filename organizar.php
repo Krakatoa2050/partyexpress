@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['usuario_id'])) {
+  header('Location: login.html?redirect=' . urlencode('organizar.php'));
+  exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">

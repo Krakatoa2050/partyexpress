@@ -11,6 +11,7 @@
     <div class="container">
         <div class="container-form">
             <form class="sign-in" method="POST" action="login_procesar.php" novalidate>
+                <input type="hidden" name="redirect" id="redirect-login" value="">
                 <h2>Iniciar sesión</h2>
                 <span>Usa tu usuario y contraseña</span>
                 <div class="container-input">
@@ -29,6 +30,7 @@
         </div>
         <div class="container-form">
             <form class="sign-up" method="POST" action="registro_procesar.php" novalidate>
+                <input type="hidden" name="redirect" id="redirect-registro" value="">
                 <h2>Registrarse</h2>
                 <span>Usa tus datos para registrarte</span>
                 <div class="container-input">
@@ -93,8 +95,6 @@
         if (!form.checkValidity()) {
           e.preventDefault();
           form.classList.remove('form-invalid');
-          // fuerza reflow para reiniciar animación
-          // eslint-disable-next-line no-unused-expressions
           void form.offsetWidth;
           form.classList.add('form-invalid');
           return;
@@ -107,6 +107,16 @@
         }
       });
     });
+
+    // Propagar redirect desde querystring a inputs ocultos
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      const a = document.getElementById('redirect-login');
+      const b = document.getElementById('redirect-registro');
+      if (a) a.value = redirect;
+      if (b) b.value = redirect;
+    }
     </script>
 </body>
 </html> 

@@ -324,11 +324,149 @@ body {
     box-shadow: 0 2px 12px rgba(162,89,247,0.18);
     cursor: pointer;
     transition: background 0.2s, transform 0.18s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .organiza-btn:hover {
     background: linear-gradient(90deg, #7209b7 60%, #a259f7 100%);
     transform: scale(1.04);
+}
+
+/* Sección de contacto separada al final - más compacta */
+.contacto-section {
+    background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 100%);
+    margin: 0;
+    padding: 24px 0 18px 0;
+    text-align: center;
+    border-top: 2px solid #a259f7;
+    position: relative;
+}
+
+.contacto-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #a259f7, transparent);
+}
+
+.contacto-section h2 {
+    color: #fff;
+    font-size: 1.6rem;
+    margin-bottom: 18px;
+    text-shadow: 0 1px 10px rgba(162,89,247,0.25);
+}
+
+.contacto-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 14px;
+}
+
+.contacto-info {
+    text-align: left;
+    background: rgba(45,25,80,0.85);
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+    border: 1px solid rgba(162,89,247,0.18);
+    backdrop-filter: blur(8px);
+}
+
+.contacto-info h3 {
+    color: #a259f7;
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.contacto-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.contacto-item i {
+    color: #a259f7;
+    font-size: 1rem;
+    margin-top: 2px;
+    min-width: 18px;
+}
+
+.contacto-item strong {
+    color: #a259f7;
+}
+
+.contacto-form {
+    background: rgba(45,25,80,0.85);
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+    border: 1px solid rgba(162,89,247,0.18);
+    backdrop-filter: blur(8px);
+}
+
+.contacto-form h3 {
+    color: #a259f7;
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid rgba(162,89,247,0.35);
+    border-radius: 8px;
+    background: rgba(24,18,43,0.92);
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #a259f7;
+    box-shadow: 0 0 0 3px rgba(162,89,247,0.22);
+    transform: translateY(-1px);
+}
+
+.contacto-btn {
+    background: linear-gradient(90deg, #a259f7 60%, #7209b7 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+    box-shadow: 0 5px 16px rgba(162,89,247,0.28);
+}
+
+.contacto-btn:hover {
+    background: linear-gradient(90deg, #7209b7 60%, #a259f7 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(162,89,247,0.34);
 }
 
 @media (max-width: 768px) {
@@ -361,5 +499,24 @@ body {
     
     .fiestas-lista {
         gap: 1rem;
+    }
+
+    .contacto-section {
+        padding: 20px 0 14px 0;
+    }
+    .contacto-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 14px;
+    }
+    .contacto-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        max-width: 520px;
+        padding: 0 12px;
+    }
+    .contacto-info,
+    .contacto-form {
+        padding: 16px;
+        border-radius: 10px;
     }
 } 
