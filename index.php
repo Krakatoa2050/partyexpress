@@ -52,11 +52,11 @@ session_start();
     <section class="categorias-section">
         <h2>Categorías populares</h2>
         <div class="categorias-lista">
-            <div class="categoria-card">🎧 Electrónica</div>
-            <div class="categoria-card">🍸 Bares</div>
-            <div class="categoria-card">🏠 Fiestas privadas</div>
-            <div class="categoria-card">🎤 Conciertos</div>
-            <div class="categoria-card">🎂 Salones de eventos</div>
+            <div class="categoria-card">Electrónica</div>
+            <div class="categoria-card">Bares</div>
+            <div class="categoria-card">Fiestas privadas</div>
+            <div class="categoria-card">Conciertos</div>
+            <div class="categoria-card">Salones de eventos</div>
         </div>
     </section>
     
@@ -79,7 +79,7 @@ session_start();
     </section>
     
     <section class="organiza-section">
-        <button class="organiza-btn">+ Organiza tu propia fiesta</button>
+        <a href="organizar.php" class="organiza-btn">+ Organiza tu propia fiesta</a>
     </section>
     
     <script>

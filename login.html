@@ -10,39 +10,45 @@
 <body>
     <div class="container">
         <div class="container-form">
-            <form class="sign-in" method="POST" action="login_procesar.php">
+            <form class="sign-in" method="POST" action="login_procesar.php" novalidate>
                 <h2>Iniciar sesión</h2>
                 <span>Usa tu usuario y contraseña</span>
                 <div class="container-input">
-                    <i class="fa fa-user"></i>
-                    <input type="text" name="usuario" placeholder="Usuario" required>
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                    <input type="text" name="usuario" placeholder="Usuario" aria-label="Usuario" required autocomplete="username" minlength="3">
                 </div>
                 <div class="container-input">
-                    <i class="fa fa-lock"></i>
-                    <input type="password" name="contrasena" placeholder="Contraseña" required>
+                    <i class="fa fa-lock" aria-hidden="true"></i>
+                    <input type="password" name="contrasena" placeholder="Contraseña" aria-label="Contraseña" required autocomplete="current-password" minlength="6">
+                    <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+                        <i class="fa fa-eye"></i>
+                    </button>
                 </div>
                 <button class="button" type="submit">Iniciar sesión</button>
             </form>
         </div>
         <div class="container-form">
-            <form class="sign-up" method="POST" action="registro_procesar.php">
+            <form class="sign-up" method="POST" action="registro_procesar.php" novalidate>
                 <h2>Registrarse</h2>
                 <span>Usa tus datos para registrarte</span>
                 <div class="container-input">
-                    <i class="fa fa-user"></i>
-                    <input type="text" name="nombre" placeholder="Nombre" required>
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                    <input type="text" name="nombre" placeholder="Nombre" aria-label="Nombre" required autocomplete="name" minlength="2">
                 </div>
                 <div class="container-input">
-                    <i class="fa fa-user-circle"></i>
-                    <input type="text" name="usuario" placeholder="Usuario" required>
+                    <i class="fa fa-user-circle" aria-hidden="true"></i>
+                    <input type="text" name="usuario" placeholder="Usuario" aria-label="Usuario" required autocomplete="username" minlength="3">
                 </div>
                 <div class="container-input">
-                    <i class="fa fa-envelope"></i>
-                    <input type="email" name="email" placeholder="Correo electrónico" required>
+                    <i class="fa fa-envelope" aria-hidden="true"></i>
+                    <input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico" required autocomplete="email">
                 </div>
                 <div class="container-input">
-                    <i class="fa fa-lock"></i>
-                    <input type="password" name="contrasena" placeholder="Contraseña" required>
+                    <i class="fa fa-lock" aria-hidden="true"></i>
+                    <input type="password" name="contrasena" placeholder="Contraseña" aria-label="Contraseña" required autocomplete="new-password" minlength="6">
+                    <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+                        <i class="fa fa-eye"></i>
+                    </button>
                 </div>
                 <button class="button" type="submit">Registrarse</button>
             </form>
@@ -64,11 +70,42 @@
     const container = document.querySelector(".container");
     const btnsignin = document.getElementById("btn-sign-in");
     const btnsigup = document.getElementById("btn-sign-up");
-    btnsignin.addEventListener("click",()=>{
-        container.classList.remove("toggle");
+    if (btnsignin && btnsigup) {
+      btnsignin.addEventListener("click",()=>{ container.classList.remove("toggle"); });
+      btnsigup.addEventListener("click",()=>{ container.classList.add("toggle"); });
+    }
+
+    // Mostrar / ocultar contraseña
+    document.querySelectorAll('.toggle-password').forEach((btn)=>{
+      btn.addEventListener('click', ()=>{
+        const input = btn.closest('.container-input')?.querySelector('input');
+        const icon = btn.querySelector('i');
+        if (!input) return;
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        if (icon) { icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
+      });
     });
-    btnsigup.addEventListener("click",()=>{
-        container.classList.add("toggle")
+
+    // Estado de envío y validación nativa
+    document.querySelectorAll('form').forEach((form)=>{
+      form.addEventListener('submit',(e)=>{
+        if (!form.checkValidity()) {
+          e.preventDefault();
+          form.classList.remove('form-invalid');
+          // fuerza reflow para reiniciar animación
+          // eslint-disable-next-line no-unused-expressions
+          void form.offsetWidth;
+          form.classList.add('form-invalid');
+          return;
+        }
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.dataset.originalText = submitBtn.textContent || '';
+          submitBtn.textContent = 'Enviando...';
+        }
+      });
     });
     </script>
 </body>
