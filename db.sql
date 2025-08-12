@@ -9,12 +9,12 @@ USE partyexpress;
 -- =====================================================
 -- TABLA DE USUARIOS
 -- =====================================================
-    CREATE TABLE IF NOT EXISTS usuarios (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(100) NOT NULL,
-        usuario VARCHAR(50) NOT NULL UNIQUE,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        contrasena VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    usuario VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    contrasena VARCHAR(255) NOT NULL,
         fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         ultimo_acceso TIMESTAMP NULL,
         activo BOOLEAN DEFAULT TRUE,
@@ -273,6 +273,40 @@ USE partyexpress;
     CREATE INDEX idx_archivos_solicitud_tipo ON archivos_adjuntos(solicitud_id, tipo_mime);
 
     -- =====================================================
+    -- TABLA DE LUGARES DE EVENTOS
+    -- =====================================================
+    CREATE TABLE IF NOT EXISTS lugares_eventos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(200) NOT NULL,
+        descripcion TEXT,
+        categoria VARCHAR(100) NOT NULL,
+        direccion VARCHAR(255) NOT NULL,
+        latitud DECIMAL(10,8) NOT NULL,
+        longitud DECIMAL(11,8) NOT NULL,
+        telefono VARCHAR(50),
+        email VARCHAR(100),
+        capacidad INT,
+        precio_minimo DECIMAL(10,2),
+        imagen VARCHAR(255),
+        activo BOOLEAN DEFAULT TRUE,
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        INDEX idx_categoria (categoria),
+        INDEX idx_activo (activo),
+        INDEX idx_precio (precio_minimo),
+        INDEX idx_ubicacion (latitud, longitud)
+    );
+
+    -- Insertar lugares de ejemplo
+    INSERT IGNORE INTO lugares_eventos (nombre, descripcion, categoria, direccion, latitud, longitud, telefono, email, capacidad, precio_minimo) VALUES
+    ('Salón de Eventos La Casona', 'Salón elegante para eventos sociales y corporativos', 'Salones de eventos', 'Av. España 1234, Asunción, Paraguay', -25.2637, -57.5759, '+595 21 123 456', 'info@lacasona.com.py', 200, 1500000),
+    ('Club Social Paraguayo', 'Club tradicional con salones para fiestas y eventos', 'Clubes', 'Av. Mariscal López 456, Asunción, Paraguay', -25.2800, -57.6300, '+595 21 234 567', 'eventos@clubparaguayo.com.py', 150, 1200000),
+    ('Centro de Convenciones del Paraguay', 'Centro moderno para eventos grandes y conferencias', 'Centros de convenciones', 'Av. Costanera 789, Asunción, Paraguay', -25.2900, -57.6400, '+595 21 345 678', 'reservas@ccp.com.py', 500, 3000000),
+    ('Restaurante El Patio', 'Restaurante con terraza para eventos íntimos', 'Restaurantes', 'Calle Palma 321, Asunción, Paraguay', -25.2700, -57.6200, '+595 21 456 789', 'eventos@elpatio.com.py', 80, 800000),
+    ('Hotel Gran Asunción', 'Hotel 5 estrellas con salones de lujo', 'Hoteles', 'Av. Brasilia 654, Asunción, Paraguay', -25.3000, -57.6500, '+595 21 567 890', 'eventos@granasuncion.com.py', 300, 2500000);
+
+    -- =====================================================
     -- COMENTARIOS FINALES
     -- =====================================================
 
@@ -286,6 +320,7 @@ USE partyexpress;
     5. mensajes_contacto: Mensajes del formulario de contacto
     6. sesiones_usuarios: Control de sesiones activas
     7. logs_actividad: Registro de actividades del sistema
+    8. lugares_eventos: Lugares disponibles para eventos
 
     VISTAS:
     - vista_solicitudes_completas: Información completa de solicitudes

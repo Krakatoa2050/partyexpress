@@ -42,7 +42,7 @@ session_start();
                         <i class="fa fa-envelope"></i>
                         <div>
                             <strong>Email:</strong><br>
-                            info@partyexpress.com.py
+                            somospartyexpress@gmail.com
                         </div>
                     </div>
                     <div class="contacto-item">
@@ -58,7 +58,7 @@ session_start();
                         <div>
                             <strong>Redes sociales:</strong><br>
                             <a href="#" class="social-link">Facebook</a> | 
-                            <a href="#" class="social-link">Instagram</a> | 
+                            <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" class="social-link">Instagram</a> | 
                             <a href="#" class="social-link">WhatsApp</a>
                         </div>
                     </div>

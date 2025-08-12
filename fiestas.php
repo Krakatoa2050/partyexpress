@@ -2,8 +2,8 @@
 session_start();
 require_once 'conexion.php';
 
-// Obtener fiestas destacadas para mostrar en la página principal
-$fiestas_destacadas = [];
+// Obtener fiestas/eventos desde la base de datos
+$fiestas = [];
 try {
     $conn = obtenerConexion();
     $stmt = $conn->prepare('
@@ -16,30 +16,36 @@ try {
             se.hora_evento,
             se.capacidad,
             se.presupuesto,
+            se.privacidad,
+            se.estado,
+            se.fecha_creacion,
+            u.nombre as organizador_nombre,
+            u.usuario as organizador_usuario,
             ce.nombre as categoria_nombre,
             ce.icono as categoria_icono,
             ce.color as categoria_color,
-            u.nombre as organizador_nombre
+            COUNT(aa.id) as total_archivos
         FROM solicitudes_eventos se
         JOIN usuarios u ON se.usuario_id = u.id
         JOIN categorias_eventos ce ON se.categoria_id = ce.id
+        LEFT JOIN archivos_adjuntos aa ON se.id = aa.solicitud_id
         WHERE se.estado = "Aprobado" AND se.privacidad = "Público"
+        GROUP BY se.id
         ORDER BY se.fecha_evento ASC
-        LIMIT 3
     ');
     
     $stmt->execute();
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        $fiestas_destacadas[] = $row;
+        $fiestas[] = $row;
     }
     
     $stmt->close();
     $conn->close();
 } catch (Exception $e) {
     // Si hay error, usar datos de ejemplo
-    $fiestas_destacadas = [
+    $fiestas = [
         [
             'id' => 1,
             'titulo' => 'Fiesta de Cumpleaños 25',
@@ -49,10 +55,11 @@ try {
             'hora_evento' => '20:00:00',
             'capacidad' => 150,
             'presupuesto' => 2000000,
+            'privacidad' => 'Público',
+            'organizador_nombre' => 'María González',
             'categoria_nombre' => 'Cumpleaños',
             'categoria_icono' => 'fa-birthday-cake',
-            'categoria_color' => '#ff6b6b',
-            'organizador_nombre' => 'María González'
+            'total_archivos' => 3
         ],
         [
             'id' => 2,
@@ -63,24 +70,11 @@ try {
             'hora_evento' => '19:00:00',
             'capacidad' => 300,
             'presupuesto' => 3500000,
+            'privacidad' => 'Público',
+            'organizador_nombre' => 'Carlos Rodríguez',
             'categoria_nombre' => 'Graduación',
             'categoria_icono' => 'fa-graduation-cap',
-            'categoria_color' => '#54a0ff',
-            'organizador_nombre' => 'Carlos Rodríguez'
-        ],
-        [
-            'id' => 3,
-            'titulo' => 'Boda de Ana y Juan',
-            'descripcion' => 'Celebración de amor con ceremonia religiosa y recepción',
-            'ubicacion' => 'Hotel Gran Asunción',
-            'fecha_evento' => '2024-12-25',
-            'hora_evento' => '18:00:00',
-            'capacidad' => 200,
-            'presupuesto' => 5000000,
-            'categoria_nombre' => 'Boda',
-            'categoria_icono' => 'fa-heart',
-            'categoria_color' => '#ff9ff3',
-            'organizador_nombre' => 'Ana Martínez'
+            'total_archivos' => 2
         ]
     ];
 }
@@ -97,16 +91,75 @@ function formatearPresupuesto($presupuesto) {
     if (!$presupuesto) return 'No especificado';
     return 'Gs. ' . number_format($presupuesto, 0, ',', '.');
 }
+
+function obtenerClaseCategoria($categoria) {
+    switch ($categoria) {
+        case 'Cumpleaños': return 'categoria-cumpleanos';
+        case 'Boda': return 'categoria-boda';
+        case 'Graduación': return 'categoria-graduacion';
+        case 'Aniversario': return 'categoria-aniversario';
+        case 'Evento Corporativo': return 'categoria-corporativo';
+        case 'Fiesta Temática': return 'categoria-tematica';
+        case 'Baby Shower': return 'categoria-babyshower';
+        case 'Despedida': return 'categoria-despedida';
+        default: return 'categoria-otro';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tres Bloques</title>
+    <title>Fiestas - PartyExpress</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <style>
+        .fiestas-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .fiestas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .fiestas-title {
+            color: #a259f7;
+            font-size: 2rem;
+            margin: 0;
+        }
+        
+        .btn-filtro {
+            background: rgba(162,89,247,0.2);
+            color: #a259f7;
+            border: 1px solid rgba(162,89,247,0.4);
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        
+        .btn-filtro:hover,
+        .btn-filtro.activo {
+            background: #a259f7;
+            color: white;
+        }
+        
+        .fiestas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
         .fiesta-card {
             background: rgba(255,255,255,0.05);
             border-radius: 20px;
@@ -115,7 +168,6 @@ function formatearPresupuesto($presupuesto) {
             border: 1px solid rgba(162,89,247,0.2);
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             transition: all 0.3s ease;
-            cursor: pointer;
             position: relative;
             overflow: hidden;
             text-decoration: none;
@@ -161,6 +213,60 @@ function formatearPresupuesto($presupuesto) {
             font-weight: 600;
             text-transform: uppercase;
             margin-left: 10px;
+        }
+        
+        .categoria-cumpleanos {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.4);
+        }
+        
+        .categoria-boda {
+            background: rgba(255, 159, 243, 0.2);
+            color: #ff9ff3;
+            border: 1px solid rgba(255, 159, 243, 0.4);
+        }
+        
+        .categoria-graduacion {
+            background: rgba(84, 160, 255, 0.2);
+            color: #54a0ff;
+            border: 1px solid rgba(84, 160, 255, 0.4);
+        }
+        
+        .categoria-aniversario {
+            background: rgba(95, 39, 205, 0.2);
+            color: #5f27cd;
+            border: 1px solid rgba(95, 39, 205, 0.4);
+        }
+        
+        .categoria-corporativo {
+            background: rgba(0, 210, 211, 0.2);
+            color: #00d2d3;
+            border: 1px solid rgba(0, 210, 211, 0.4);
+        }
+        
+        .categoria-tematica {
+            background: rgba(255, 159, 67, 0.2);
+            color: #ff9f43;
+            border: 1px solid rgba(255, 159, 67, 0.4);
+        }
+        
+        .categoria-babyshower {
+            background: rgba(165, 94, 234, 0.2);
+            color: #a55eea;
+            border: 1px solid rgba(165, 94, 234, 0.4);
+        }
+        
+        .categoria-despedida {
+            background: rgba(38, 222, 129, 0.2);
+            color: #26de81;
+            border: 1px solid rgba(38, 222, 129, 0.4);
+        }
+        
+        .categoria-otro {
+            background: rgba(162, 89, 247, 0.2);
+            color: #a259f7;
+            border: 1px solid rgba(162, 89, 247, 0.4);
         }
         
         .fiesta-descripcion {
@@ -235,7 +341,6 @@ function formatearPresupuesto($presupuesto) {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            margin-top: 15px;
         }
         
         .ver-mas-btn:hover {
@@ -243,7 +348,34 @@ function formatearPresupuesto($presupuesto) {
             box-shadow: 0 10px 25px rgba(162,89,247,0.3);
         }
         
+        .sin-fiestas {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        
+        .sin-fiestas i {
+            font-size: 4rem;
+            color: #a259f7;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .sin-fiestas h3 {
+            color: #a259f7;
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 768px) {
+            .fiestas-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .fiestas-grid {
+                grid-template-columns: 1fr;
+            }
+            
             .fiesta-info {
                 grid-template-columns: 1fr;
             }
@@ -357,74 +489,44 @@ function formatearPresupuesto($presupuesto) {
     </style>
 </head>
 <body>
-    <nav class="catalogo">
-        <div class="logo-nombre">
-            <img src="img/logo.jpg" alt="Logo PartyExpress" class="logo-img">
-            <span class="logo-text">PartyExpress</span>
-        </div>
-        <ul>
-            <li><a href="index.php">Inicio</a></li>
-            <li><a href="fiestas.php">Fiestas</a></li>
-            <li><a href="lugares.php">Lugares</a></li>
-            <li><a href="organizar.php">Organizar fiesta</a></li>
-            <li><a href="contacto.php">Contacto</a></li>
-        </ul>
-        <span class="usuario-menu-container">
-            <?php if (isset($_SESSION['usuario'])): ?>
-                <span style="color:#fff;">Bienvenido, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
-                <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                    <span class="bar"></span>
+    <div class="fiestas-container">
+        <header class="fiestas-header">
+            <h1 class="fiestas-title">Fiestas y Eventos</h1>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="index.php" class="btn-filtro">
+                    <i class="fa fa-home"></i> Inicio
+                </a>
+                <button class="btn-filtro activo" data-categoria="todos">
+                    <i class="fa fa-calendar"></i> Todos
                 </button>
-                <div class="dropdown-menu" id="dropdownMenu">
-                    <a href="mis_solicitudes.php" class="menu-item">
-                        <i class="fa fa-calendar-check"></i> Mis Solicitudes
-                    </a>
-                    <form method="POST" action="logout.php" style="margin:0;">
-                        <button type="submit" class="logout-btn">Cerrar sesión</button>
-                    </form>
-                </div>
-            <?php else: ?>
-                <a href="login.html" class="login-btn">Iniciar sesión</a>
-            <?php endif; ?>
-        </span>
-    </nav>
-    
-    <section class="buscador-section">
-        <h1>Encuentra fiestas y lugares para celebrar</h1>
-        <form class="buscador-form" method="GET" action="buscar.php">
-            <input type="text" name="q" placeholder="Buscar fiestas, lugares o ciudades..." required>
-            <button type="submit">Buscar</button>
-        </form>
-    </section>
-    
-    <section class="categorias-section">
-        <h2>Categorías populares</h2>
-        <div class="categorias-lista">
-            <div class="categoria-card">Electrónica</div>
-            <div class="categoria-card">Bares</div>
-            <div class="categoria-card">Fiestas privadas</div>
-            <div class="categoria-card">Conciertos</div>
-            <div class="categoria-card">Salones de eventos</div>
-        </div>
-    </section>
-    
-    <section class="fiestas-section">
-        <h2>Lugares y fiestas destacados en Paraguay</h2>
-        <div class="fiestas-lista">
-            <?php if (empty($fiestas_destacadas)): ?>
-                <div style="text-align: center; padding: 40px; color: #888;">
-                    <i class="fa fa-calendar-times" style="font-size: 3rem; color: #a259f7; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h3 style="color: #a259f7; margin-bottom: 10px;">No hay fiestas destacadas</h3>
-                    <p>Las fiestas aparecerán aquí cuando sean aprobadas</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($fiestas_destacadas as $fiesta): ?>
-                    <a href="fiesta_detalle.php?id=<?php echo $fiesta['id']; ?>" class="fiesta-card">
+                <button class="btn-filtro" data-categoria="Cumpleaños">
+                    <i class="fa fa-birthday-cake"></i> Cumpleaños
+                </button>
+                <button class="btn-filtro" data-categoria="Boda">
+                    <i class="fa fa-heart"></i> Bodas
+                </button>
+                <button class="btn-filtro" data-categoria="Graduación">
+                    <i class="fa fa-graduation-cap"></i> Graduaciones
+                </button>
+            </div>
+        </header>
+
+        <?php if (empty($fiestas)): ?>
+            <div class="sin-fiestas">
+                <i class="fa fa-calendar-times"></i>
+                <h3>No hay fiestas públicas disponibles</h3>
+                <p>Las fiestas aparecerán aquí cuando sean aprobadas y marcadas como públicas</p>
+                <a href="organizar.php" class="btn-filtro" style="margin-top: 20px; display: inline-block;">
+                    <i class="fa fa-plus"></i> Organizar mi fiesta
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="fiestas-grid">
+                <?php foreach ($fiestas as $fiesta): ?>
+                    <a href="fiesta_detalle.php?id=<?php echo $fiesta['id']; ?>" class="fiesta-card" data-categoria="<?php echo htmlspecialchars($fiesta['categoria_nombre']); ?>">
                         <div class="fiesta-header">
                             <h3 class="fiesta-titulo"><?php echo htmlspecialchars($fiesta['titulo']); ?></h3>
-                            <span class="categoria-badge" style="background: rgba(<?php echo hex2rgb($fiesta['categoria_color']); ?>, 0.2); color: <?php echo $fiesta['categoria_color']; ?>; border: 1px solid rgba(<?php echo hex2rgb($fiesta['categoria_color']); ?>, 0.4);">
+                            <span class="categoria-badge <?php echo obtenerClaseCategoria($fiesta['categoria_nombre']); ?>">
                                 <i class="fa <?php echo htmlspecialchars($fiesta['categoria_icono']); ?>"></i>
                                 <?php echo htmlspecialchars($fiesta['categoria_nombre']); ?>
                             </span>
@@ -466,6 +568,12 @@ function formatearPresupuesto($presupuesto) {
                                 <span class="info-value"><?php echo formatearPresupuesto($fiesta['presupuesto']); ?></span>
                             </div>
                             <?php endif; ?>
+                            
+                            <div class="info-item">
+                                <i class="fa fa-eye info-icon"></i>
+                                <span class="info-label">Privacidad:</span>
+                                <span class="info-value"><?php echo htmlspecialchars($fiesta['privacidad']); ?></span>
+                            </div>
                         </div>
                         
                         <div class="fiesta-footer">
@@ -479,31 +587,16 @@ function formatearPresupuesto($presupuesto) {
                             </div>
                         </div>
                         
-                        <div class="ver-mas-btn">
+                        <div class="ver-mas-btn" style="margin-top: 15px;">
                             <i class="fa fa-eye"></i>
                             Ver detalles
                         </div>
                     </a>
                 <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="fiestas.php" class="ver-mas-btn">
-                <i class="fa fa-calendar"></i>
-                Ver todas las fiestas
-            </a>
-        </div>
-    </section>
-    
-    <section class="organiza-section">
-        <?php if (isset($_SESSION['usuario_id'])): ?>
-            <a href="organizar.php" class="organiza-btn">+ Organiza tu propia fiesta</a>
-        <?php else: ?>
-            <a href="login.html?redirect=<?php echo urlencode('organizar.php'); ?>" class="organiza-btn">+ Organiza tu propia fiesta</a>
+            </div>
         <?php endif; ?>
-    </section>
-    
+    </div>
+
     <footer class="footer-section">
         <div class="footer-content">
             <div class="footer-section">
@@ -514,7 +607,7 @@ function formatearPresupuesto($presupuesto) {
             <div class="footer-section">
                 <h3>Enlaces Rápidos</h3>
                 <ul>
-                    <li><a href="fiestas.php">Fiestas</a></li>
+                    <li><a href="index.php">Inicio</a></li>
                     <li><a href="lugares.php">Lugares</a></li>
                     <li><a href="organizar.php">Organizar Evento</a></li>
                     <li><a href="contacto.php">Contacto</a></li>
@@ -536,39 +629,27 @@ function formatearPresupuesto($presupuesto) {
             <p>&copy; 2024 PartyExpress. Todos los derechos reservados.</p>
         </div>
     </footer>
-    
+
     <script>
-        const menuToggle = document.getElementById("menuToggle");
-        const dropdownMenu = document.getElementById("dropdownMenu");
-        
-        if (menuToggle && dropdownMenu) {
-            menuToggle.onclick = function(e) {
-                e.stopPropagation();
-                dropdownMenu.classList.toggle('show');
-            };
-            
-            document.addEventListener('click', function(e) {
-                if (!dropdownMenu.contains(e.target) && !menuToggle.contains(e.target)) {
-                    dropdownMenu.classList.remove('show');
-                }
+        // Filtros
+        document.querySelectorAll('.btn-filtro[data-categoria]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const categoria = this.dataset.categoria;
+                
+                // Actualizar botones activos
+                document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
+                this.classList.add('activo');
+                
+                // Filtrar fiestas
+                document.querySelectorAll('.fiesta-card').forEach(card => {
+                    if (categoria === 'todos' || card.dataset.categoria === categoria) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
             });
-        }
+        });
     </script>
 </body>
-</html>
-
-<?php
-function hex2rgb($hex) {
-    $hex = str_replace('#', '', $hex);
-    if (strlen($hex) == 3) {
-        $r = hexdec(substr($hex,0,1).substr($hex,0,1));
-        $g = hexdec(substr($hex,1,1).substr($hex,1,1));
-        $b = hexdec(substr($hex,2,1).substr($hex,2,1));
-    } else {
-        $r = hexdec(substr($hex,0,2));
-        $g = hexdec(substr($hex,2,2));
-        $b = hexdec(substr($hex,4,2));
-    }
-    return "$r, $g, $b";
-}
-?> 
+</html> 

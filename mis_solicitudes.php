@@ -296,9 +296,14 @@ function obtenerClaseEstado($estado) {
     <div class="solicitudes-container">
         <header class="solicitudes-header">
             <h1 class="solicitudes-title">Mis Solicitudes</h1>
-            <a href="organizar.php" class="btn-nueva">
-                <i class="fa fa-plus"></i> Nueva Solicitud
-            </a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="index.php" class="btn-nueva" style="background: rgba(162,89,247,0.2); color: #a259f7; border: 1px solid rgba(162,89,247,0.4);">
+                    <i class="fa fa-home"></i> Volver al inicio
+                </a>
+                <a href="organizar.php" class="btn-nueva">
+                    <i class="fa fa-plus"></i> Nueva Solicitud
+                </a>
+            </div>
         </header>
 
         <?php if (isset($error)): ?>
@@ -312,9 +317,14 @@ function obtenerClaseEstado($estado) {
                 <i class="fa fa-calendar-plus"></i>
                 <h3>No tienes solicitudes aún</h3>
                 <p>Comienza creando tu primera solicitud de evento</p>
-                <a href="organizar.php" class="btn-nueva" style="margin-top: 20px; display: inline-block;">
-                    <i class="fa fa-plus"></i> Crear Solicitud
-                </a>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
+                    <a href="index.php" class="btn-nueva" style="background: rgba(162,89,247,0.2); color: #a259f7; border: 1px solid rgba(162,89,247,0.4);">
+                        <i class="fa fa-home"></i> Volver al inicio
+                    </a>
+                    <a href="organizar.php" class="btn-nueva">
+                        <i class="fa fa-plus"></i> Crear Solicitud
+                    </a>
+                </div>
             </div>
         <?php else: ?>
             <div class="solicitudes-grid">
