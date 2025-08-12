@@ -7,6 +7,7 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tres Bloques</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -31,6 +32,9 @@ session_start();
                     <span class="bar"></span>
                 </button>
                 <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="mis_solicitudes.php" class="menu-item">
+                        <i class="fa fa-calendar-check"></i> Mis Solicitudes
+                    </a>
                     <form method="POST" action="logout.php" style="margin:0;">
                         <button type="submit" class="logout-btn">Cerrar sesión</button>
                     </form>

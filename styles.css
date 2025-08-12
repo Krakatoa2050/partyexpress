@@ -122,6 +122,27 @@ body {
     display: block;
 }
 
+.menu-item {
+    display: block;
+    color: #a259f7;
+    text-decoration: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(162,89,247,0.2);
+}
+
+.menu-item:hover {
+    background: #18122B;
+    color: #fff;
+}
+
+.menu-item i {
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
 .logout-btn {
     width: 100%;
     background: none;

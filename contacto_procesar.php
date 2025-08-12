@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'conexion.php';
 
 function h($v) { 
     return htmlspecialchars((string)$v ?? '', ENT_QUOTES, 'UTF-8'); 
@@ -28,8 +29,47 @@ if ($mensaje === '' || mb_strlen($mensaje) < 10) {
     $errores[] = 'El mensaje es obligatorio (mínimo 10 caracteres).';
 }
 
-// Si no hay errores, aquí podrías guardar en base de datos o enviar email
-$mensaje_enviado = empty($errores);
+// Si no hay errores, guardar en base de datos
+$mensaje_enviado = false;
+$mensaje_id = null;
+
+if (empty($errores)) {
+    try {
+        $conn = obtenerConexion();
+        
+        // Obtener usuario_id si está logueado
+        $usuario_id = null;
+        if (isset($_SESSION['usuario_id'])) {
+            $usuario_id = $_SESSION['usuario_id'];
+        }
+        
+        // Obtener IP del cliente
+        $ip_remota = $_SERVER['REMOTE_ADDR'] ?? '';
+        
+        $stmt = $conn->prepare('INSERT INTO mensajes_contacto (nombre, email, asunto, mensaje, usuario_id, ip_remota) VALUES (?, ?, ?, ?, ?, ?)');
+        
+        if (!$stmt) {
+            throw new Exception('Error en prepare: ' . $conn->error);
+        }
+        
+        if (!$stmt->bind_param('ssssis', $nombre, $email, $asunto, $mensaje, $usuario_id, $ip_remota)) {
+            throw new Exception('Error en bind_param: ' . $stmt->error);
+        }
+        
+        if ($stmt->execute()) {
+            $mensaje_id = $conn->insert_id;
+            $mensaje_enviado = true;
+        } else {
+            throw new Exception('Error en execute: ' . $stmt->error);
+        }
+        
+        $stmt->close();
+        $conn->close();
+        
+    } catch (Exception $e) {
+        $errores[] = 'Error al guardar el mensaje: ' . $e->getMessage();
+    }
+}
 
 ?>
 <!DOCTYPE html>

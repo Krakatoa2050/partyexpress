@@ -1,5 +1,7 @@
 <?php
 session_start();
+require_once 'conexion.php';
+
 if (!isset($_SESSION['usuario_id'])) {
   header('Location: login.html?redirect=' . urlencode('organizar.php'));
   exit();
@@ -27,18 +29,101 @@ if ($fecha === '') { $errores[] = 'La fecha es obligatoria.'; }
 if ($hora === '') { $errores[] = 'La hora es obligatoria.'; }
 
 $subidos = [];
+$solicitud_id = null;
 $MAX_FILES = 10;
 $MAX_SIZE = 8 * 1024 * 1024; // 8MB
 $ALLOWED_MIME = [
   'image/jpeg','image/png','image/gif','image/webp','application/pdf'
 ];
 
+// Si no hay errores, guardar solicitud en base de datos
+if (empty($errores)) {
+    try {
+        $conn = obtenerConexion();
+        
+        // Verificar que el usuario existe y está activo
+        $stmt_user = $conn->prepare('SELECT id, usuario, nombre FROM usuarios WHERE id = ? AND activo = TRUE');
+        if (!$stmt_user) {
+            throw new Exception('Error en prepare usuario: ' . $conn->error);
+        }
+        
+        $stmt_user->bind_param('i', $_SESSION['usuario_id']);
+        $stmt_user->execute();
+        $result_user = $stmt_user->get_result();
+        
+        if ($result_user->num_rows === 0) {
+            // El usuario no existe o no está activo, redirigir al login
+            session_destroy();
+            header('Location: login.html?redirect=' . urlencode('organizar.php'));
+            exit();
+        }
+        
+        $usuario_data = $result_user->fetch_assoc();
+        $stmt_user->close();
+        
+        // Obtener categoria_id
+        $stmt_cat = $conn->prepare('SELECT id FROM categorias_eventos WHERE nombre = ? AND activa = TRUE');
+        if (!$stmt_cat) {
+            throw new Exception('Error en prepare categoría: ' . $conn->error);
+        }
+        
+        $stmt_cat->bind_param('s', $categoria);
+        $stmt_cat->execute();
+        $result_cat = $stmt_cat->get_result();
+        
+        if ($result_cat->num_rows === 0) {
+            throw new Exception('Categoría no encontrada: ' . $categoria);
+        }
+        
+        $categoria_row = $result_cat->fetch_assoc();
+        $categoria_id = $categoria_row['id'];
+        $stmt_cat->close();
+        
+        // Insertar solicitud
+        $stmt_sol = $conn->prepare('INSERT INTO solicitudes_eventos (usuario_id, titulo, categoria_id, descripcion, ubicacion, fecha_evento, hora_evento, capacidad, presupuesto, privacidad, contacto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        
+        if (!$stmt_sol) {
+            throw new Exception('Error en prepare solicitud: ' . $conn->error);
+        }
+        
+        // Convertir capacidad y presupuesto a números
+        $capacidad_int = $capacidad ? intval($capacidad) : null;
+        $presupuesto_decimal = $presupuesto ? floatval($presupuesto) : null;
+        
+        $stmt_sol->bind_param('isissssdsss', 
+            $usuario_data['id'], // Usar el ID verificado del usuario
+            $titulo, 
+            $categoria_id, 
+            $descripcion, 
+            $ubicacion, 
+            $fecha, 
+            $hora, 
+            $capacidad_int, 
+            $presupuesto_decimal, 
+            $privacidad, 
+            $contacto
+        );
+        
+        if ($stmt_sol->execute()) {
+            $solicitud_id = $conn->insert_id;
+        } else {
+            throw new Exception('Error en execute solicitud: ' . $stmt_sol->error);
+        }
+        
+        $stmt_sol->close();
+        
+    } catch (Exception $e) {
+        $errores[] = 'Error al guardar la solicitud: ' . $e->getMessage();
+    }
+}
+
 $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'uploads';
 if (!is_dir($uploadDir)) {
   @mkdir($uploadDir, 0777, true);
 }
 
-if (!empty($_FILES['adjuntos']) && is_array($_FILES['adjuntos']['name'])) {
+// Procesar archivos si la solicitud se guardó correctamente
+if ($solicitud_id && !empty($_FILES['adjuntos']) && is_array($_FILES['adjuntos']['name'])) {
   $count = count($_FILES['adjuntos']['name']);
   for ($i = 0; $i < $count && count($subidos) < $MAX_FILES; $i++) {
     $err = $_FILES['adjuntos']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
@@ -59,9 +144,39 @@ if (!empty($_FILES['adjuntos']) && is_array($_FILES['adjuntos']['name'])) {
     $safeBase = preg_replace('/[^a-zA-Z0-9-_]/','_', pathinfo($name, PATHINFO_FILENAME));
     $final = sprintf('%s_%s.%s', $safeBase !== '' ? $safeBase : 'archivo', uniqid(), $ext ?: 'bin');
     $dest = $uploadDir . DIRECTORY_SEPARATOR . $final;
-    if (!@move_uploaded_file($tmp, $dest)) { $errores[] = 'No se pudo guardar: '.h($name); continue; }
-    $subidos[] = 'uploads/'.$final;
+    
+    if (!@move_uploaded_file($tmp, $dest)) { 
+        $errores[] = 'No se pudo guardar: '.h($name); 
+        continue; 
+    }
+    
+    $ruta_archivo = 'uploads/'.$final;
+    $subidos[] = $ruta_archivo;
+    
+    // Guardar archivo en base de datos
+    try {
+        $stmt_arch = $conn->prepare('INSERT INTO archivos_adjuntos (solicitud_id, nombre_original, nombre_archivo, ruta_archivo, tipo_mime, tamano_bytes) VALUES (?, ?, ?, ?, ?, ?)');
+        
+        if (!$stmt_arch) {
+            throw new Exception('Error en prepare archivo: ' . $conn->error);
+        }
+        
+        $stmt_arch->bind_param('issssi', $solicitud_id, $name, $final, $ruta_archivo, $mime, $size);
+        
+        if (!$stmt_arch->execute()) {
+            throw new Exception('Error al guardar archivo en BD: ' . $stmt_arch->error);
+        }
+        
+        $stmt_arch->close();
+        
+    } catch (Exception $e) {
+        $errores[] = 'Error al guardar archivo en BD: ' . $e->getMessage();
+    }
   }
+}
+
+if (isset($conn)) {
+    $conn->close();
 }
 
 ?><!DOCTYPE html>

@@ -1,8 +1,39 @@
 <?php
 session_start();
+require_once 'conexion.php';
+
 if (!isset($_SESSION['usuario_id'])) {
   header('Location: login.html?redirect=' . urlencode('organizar.php'));
   exit();
+}
+
+// Cargar categorías desde la base de datos
+$categorias = [];
+try {
+    $conn = obtenerConexion();
+    $stmt = $conn->prepare('SELECT id, nombre, icono, color FROM categorias_eventos WHERE activa = TRUE ORDER BY nombre');
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $categorias[] = $row;
+    }
+    
+    $stmt->close();
+    $conn->close();
+} catch (Exception $e) {
+    // Si hay error, usar categorías por defecto
+    $categorias = [
+        ['id' => 1, 'nombre' => 'Cumpleaños', 'icono' => 'fa-birthday-cake'],
+        ['id' => 2, 'nombre' => 'Boda', 'icono' => 'fa-heart'],
+        ['id' => 3, 'nombre' => 'Graduación', 'icono' => 'fa-graduation-cap'],
+        ['id' => 4, 'nombre' => 'Aniversario', 'icono' => 'fa-calendar-heart'],
+        ['id' => 5, 'nombre' => 'Evento Corporativo', 'icono' => 'fa-briefcase'],
+        ['id' => 6, 'nombre' => 'Fiesta Temática', 'icono' => 'fa-mask'],
+        ['id' => 7, 'nombre' => 'Baby Shower', 'icono' => 'fa-baby'],
+        ['id' => 8, 'nombre' => 'Despedida', 'icono' => 'fa-glass-cheers'],
+        ['id' => 9, 'nombre' => 'Otro', 'icono' => 'fa-star']
+    ];
 }
 ?>
 <!DOCTYPE html>
@@ -35,12 +66,12 @@ if (!isset($_SESSION['usuario_id'])) {
             <label for="categoria">Categoría</label>
             <select id="categoria" name="categoria" required>
               <option value="" disabled selected>Elegí una categoría</option>
-              <option>Electrónica</option>
-              <option>Bares</option>
-              <option>Fiestas privadas</option>
-              <option>Conciertos</option>
-              <option>Salones de eventos</option>
-              <option>Otros</option>
+              <?php foreach ($categorias as $cat): ?>
+                <option value="<?php echo htmlspecialchars($cat['nombre']); ?>">
+                  <i class="<?php echo htmlspecialchars($cat['icono']); ?>"></i>
+                  <?php echo htmlspecialchars($cat['nombre']); ?>
+                </option>
+              <?php endforeach; ?>
             </select>
           </div>
           <div class="org-field org-col-2">
@@ -72,6 +103,7 @@ if (!isset($_SESSION['usuario_id'])) {
             <select id="privacidad" name="privacidad">
               <option>Público</option>
               <option>Privado</option>
+              <option>Solo invitados</option>
             </select>
           </div>
           <div class="org-field">
