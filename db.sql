@@ -307,6 +307,29 @@ CREATE TABLE IF NOT EXISTS usuarios (
     ('Hotel Gran Asunción', 'Hotel 5 estrellas con salones de lujo', 'Hoteles', 'Av. Brasilia 654, Asunción, Paraguay', -25.3000, -57.6500, '+595 21 567 890', 'eventos@granasuncion.com.py', 300, 2500000);
 
     -- =====================================================
+    -- DATOS DE EJEMPLO PARA PRUEBAS
+    -- =====================================================
+
+    -- Insertar usuario de ejemplo si no existe
+    INSERT IGNORE INTO usuarios (nombre, usuario, email, contrasena, activo) VALUES
+    ('María González', 'mariagonzalez', 'maria@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE),
+    ('Carlos Rodríguez', 'carlosrodriguez', 'carlos@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE),
+    ('Ana Martínez', 'anamartinez', 'ana@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE);
+
+    -- Insertar fiestas de ejemplo
+    INSERT IGNORE INTO solicitudes_eventos (usuario_id, titulo, categoria_id, descripcion, ubicacion, fecha_evento, hora_evento, capacidad, presupuesto, privacidad, contacto, estado) VALUES
+    (1, 'Fiesta de Cumpleaños 25 - María', 1, 'Celebración especial de mi cumpleaños número 25 con música en vivo, buffet completo, decoración temática y sorpresas especiales. ¡Todos están invitados a celebrar conmigo!', 'Salón La Casona, Av. España 1234, Asunción, Paraguay', '2024-12-15', '20:00:00', 150, 2000000, 'Público', 'maria@example.com', 'Aprobado'),
+    (2, 'Graduación Universidad - Ingeniería', 3, 'Ceremonia de graduación de la promoción 2024 de Ingeniería con cena de gala, entrega de diplomas y celebración especial. Evento formal con dress code elegante.', 'Centro de Convenciones del Paraguay, Av. Costanera 789, Asunción', '2024-12-20', '19:00:00', 300, 3500000, 'Público', 'carlos@example.com', 'Aprobado'),
+    (3, 'Boda de Ana y Juan - Celebración de Amor', 2, 'Celebración de nuestro amor con ceremonia religiosa en la iglesia y recepción en hotel de lujo. Incluye cena, baile, fotografía profesional y momentos inolvidables.', 'Hotel Gran Asunción, Av. Brasilia 654, Asunción', '2024-12-25', '18:00:00', 200, 5000000, 'Público', 'ana@example.com', 'Aprobado'),
+    (1, 'Fiesta Temática - Años 80', 6, 'Fiesta retro con música de los años 80, decoración vintage, disfraces de la época y mucho baile. ¡Vamos a revivir la mejor década!', 'Club Social Paraguayo, Av. Mariscal López 456, Asunción', '2024-12-30', '21:00:00', 120, 1800000, 'Público', 'maria@example.com', 'Aprobado'),
+    (2, 'Evento Corporativo - Lanzamiento Producto', 5, 'Lanzamiento oficial de nuestro nuevo producto con presentación ejecutiva, networking, cóctel y entretenimiento. Evento exclusivo para profesionales del sector.', 'Centro de Convenciones del Paraguay, Av. Costanera 789, Asunción', '2025-01-10', '18:30:00', 250, 4000000, 'Público', 'carlos@example.com', 'Aprobado'),
+    (3, '🎉 Mega Fiesta de Verano - Pool Party Extravaganza', 6, '¡La fiesta más épica del verano! Pool party con DJ en vivo, barras de cócteles temáticos, juegos acuáticos, food trucks gourmet, zona VIP con cabañas privadas, show de luces láser y fuegos artificiales. Dress code: traje de baño y actitud festiva. ¡No te pierdas la experiencia del año! 🌊🎵✨', 'Parque Acuático Aqualandia, Ruta 2 Km 25, San Bernardino, Paraguay', '2025-01-25', '16:00:00', 500, 8000000, 'Público', 'ana@example.com', 'Aprobado');
+
+    -- Insertar lugar de la fiesta personalizada
+    INSERT IGNORE INTO lugares_eventos (nombre, descripcion, categoria, direccion, latitud, longitud, telefono, email, capacidad, precio_minimo) VALUES
+    ('Parque Acuático Aqualandia', 'Parque acuático de lujo con piscinas infinitas, toboganes extremos, zona VIP y servicios premium para eventos especiales', 'Parques acuáticos', 'Ruta 2 Km 25, San Bernardino, Paraguay', -25.3500, -57.3000, '+595 21 987 654', 'eventos@aqualandia.com.py', 500, 5000000);
+
+    -- =====================================================
     -- COMENTARIOS FINALES
     -- =====================================================
 

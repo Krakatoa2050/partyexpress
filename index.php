@@ -121,6 +121,9 @@ function formatearPresupuesto($presupuesto) {
             text-decoration: none;
             color: inherit;
             display: block;
+            min-height: 380px;
+            width: auto;
+            margin: 0;
         }
         
         .fiesta-card::before {
@@ -148,26 +151,33 @@ function formatearPresupuesto($presupuesto) {
         
         .fiesta-titulo {
             color: #a259f7;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            margin: 0;
+            margin: 0 0 12px 0;
             flex: 1;
+            line-height: 1.2;
         }
         
         .categoria-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
-            margin-left: 10px;
+            margin-left: 8px;
         }
         
         .fiesta-descripcion {
             color: #ccc;
-            line-height: 1.6;
+            line-height: 1.4;
             margin-bottom: 20px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            min-height: 50px;
+            max-height: 70px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
         
         .fiesta-info {
@@ -181,23 +191,24 @@ function formatearPresupuesto($presupuesto) {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 0.9rem;
         }
         
         .info-icon {
             color: #a259f7;
-            width: 18px;
+            width: 16px;
             text-align: center;
         }
         
         .info-label {
             color: #a259f7;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .info-value {
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .fiesta-footer {
@@ -205,7 +216,8 @@ function formatearPresupuesto($presupuesto) {
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
+            margin-bottom: 20px;
         }
         
         .organizador {
@@ -220,27 +232,31 @@ function formatearPresupuesto($presupuesto) {
         .fecha-evento {
             color: #28a745;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
         
         .ver-mas-btn {
             background: linear-gradient(90deg, #a259f7 60%, #7209b7 100%);
             color: white;
-            padding: 8px 16px;
+            padding: 12px 20px;
             border-radius: 20px;
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             margin-top: 15px;
+            width: 100%;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(162,89,247,0.3);
         }
         
         .ver-mas-btn:hover {
+            background: linear-gradient(90deg, #7209b7 60%, #a259f7 100%);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(162,89,247,0.3);
+            box-shadow: 0 6px 16px rgba(162,89,247,0.4);
         }
         
         @media (max-width: 768px) {
@@ -353,6 +369,12 @@ function formatearPresupuesto($presupuesto) {
                 grid-template-columns: 1fr;
                 text-align: center;
             }
+        }
+        .fiestas-lista {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -470,29 +492,19 @@ function formatearPresupuesto($presupuesto) {
                         
                         <div class="fiesta-footer">
                             <div class="organizador">
-                                Organizado por: <strong><?php echo htmlspecialchars($fiesta['organizador_nombre']); ?></strong>
+                                Organizado por <strong><?php echo htmlspecialchars($fiesta['organizador_nombre']); ?></strong>
                             </div>
-                            
                             <div class="fecha-evento">
-                                <i class="fa fa-calendar-check"></i>
                                 <?php echo formatearFecha($fiesta['fecha_evento']); ?>
                             </div>
-                        </div>
-                        
-                        <div class="ver-mas-btn">
-                            <i class="fa fa-eye"></i>
-                            Ver detalles
+                            <div class="ver-mas-btn">
+                                <i class="fa fa-eye"></i>
+                                Ver detalles
+                            </div>
                         </div>
                     </a>
                 <?php endforeach; ?>
             <?php endif; ?>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="fiestas.php" class="ver-mas-btn">
-                <i class="fa fa-calendar"></i>
-                Ver todas las fiestas
-            </a>
         </div>
     </section>
     

@@ -61,7 +61,7 @@ session_start();
                             <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" class="social-link">Instagram</a> | 
                             <a href="#" class="social-link">WhatsApp</a>
                         </div>
-                    </div>
+                    </div>      
                 </div>
 
                 <div class="contacto-form-card">
