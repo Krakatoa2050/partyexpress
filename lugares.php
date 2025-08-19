@@ -687,7 +687,8 @@ function formatearPrecio($precio) {
     
     <!-- Reemplaza YOUR_API_KEY con tu clave de Google Maps API -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA8tUa5RzSiYZ27YhHUJ5FK7bn3d86UUT8&callback=initMap
+">
     </script>
 </body>
 </html> 
