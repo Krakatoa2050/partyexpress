@@ -8,12 +8,12 @@ $redirect = $_POST['redirect'] ?? '';
 
 if ($usuario && $contrasena) {
     $conn = obtenerConexion();
-    $stmt = $conn->prepare('SELECT id, contrasena, nombre FROM usuarios WHERE usuario = ? AND activo = TRUE');
+    $stmt = $conn->prepare('SELECT id, contrasena, nombre, email, two_factor_enabled FROM usuarios WHERE usuario = ? AND activo = TRUE');
     $stmt->bind_param('s', $usuario);
     $stmt->execute();
     $stmt->store_result();
     if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $hash, $nombre);
+        $stmt->bind_result($id, $hash, $nombre, $email, $two_factor_enabled);
         $stmt->fetch();
         if (password_verify($contrasena, $hash)) {
             // Actualizar último acceso
@@ -32,18 +32,30 @@ if ($usuario && $contrasena) {
             $stmt_sesion->execute();
             $stmt_sesion->close();
             
-            // Guardar en sesión PHP
-            $_SESSION['usuario_id'] = $id;
-            $_SESSION['usuario'] = $usuario;
-            $_SESSION['nombre'] = $nombre;
-            $_SESSION['token_sesion'] = $token_sesion;
-            
-            if ($redirect) {
-                header('Location: ' . $redirect);
+            // Verificar si el usuario tiene 2FA activado
+            if ($two_factor_enabled) {
+                // Guardar información temporal para verificación 2FA
+                $_SESSION['temp_user_id'] = $id;
+                $_SESSION['temp_user_email'] = $email;
+                $_SESSION['redirect_after_login'] = $redirect ?: 'index.php';
+                
+                // Redirigir a verificación 2FA
+                header('Location: verificar_2fa.php');
+                exit();
             } else {
-                header('Location: index.php');
+                // Guardar en sesión PHP (sin 2FA)
+                $_SESSION['usuario_id'] = $id;
+                $_SESSION['usuario'] = $usuario;
+                $_SESSION['nombre'] = $nombre;
+                $_SESSION['token_sesion'] = $token_sesion;
+                
+                if ($redirect) {
+                    header('Location: ' . $redirect);
+                } else {
+                    header('Location: index.php');
+                }
+                exit();
             }
-            exit();
         } else {
             echo '<script>alert("Contraseña incorrecta."); window.location="login.html";</script>';
         }

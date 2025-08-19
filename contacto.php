@@ -57,9 +57,9 @@ session_start();
                         <i class="fa fa-comments"></i>
                         <div>
                             <strong>Redes sociales:</strong><br>
-                            <a href="#" class="social-link">Facebook</a> | 
-                            <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" class="social-link">Instagram</a> | 
-                            <a href="#" class="social-link">WhatsApp</a>
+                            <a href="https://www.facebook.com/partyexpress.py" class="social-link" target="_blank">Facebook</a> | 
+                            <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" class="social-link" target="_blank">Instagram</a> | 
+                            <a href="https://wa.me/595981123456" class="social-link" target="_blank">WhatsApp</a>
                         </div>
                     </div>      
                 </div>

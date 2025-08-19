@@ -2,10 +2,19 @@
 session_start();
 require_once 'conexion.php';
 
-// Obtener fiestas destacadas para mostrar en la página principal
-$fiestas_destacadas = [];
+if (!isset($_SESSION['usuario_id'])) {
+    header('Location: login.html?redirect=' . urlencode('favoritos.php'));
+    exit();
+}
+
+// Obtener favoritos del usuario
+$favoritos = [];
+$total_favoritos = 0;
+
 try {
     $conn = obtenerConexion();
+    
+    // Por ahora simulamos favoritos, en el futuro esto vendría de una tabla favoritos
     $stmt = $conn->prepare('
         SELECT 
             se.id,
@@ -16,73 +25,35 @@ try {
             se.hora_evento,
             se.capacidad,
             se.presupuesto,
+            se.privacidad,
+            se.estado,
+            se.fecha_creacion,
+            u.nombre as organizador_nombre,
+            u.usuario as organizador_usuario,
             ce.nombre as categoria_nombre,
             ce.icono as categoria_icono,
-            ce.color as categoria_color,
-            u.nombre as organizador_nombre
+            ce.color as categoria_color
         FROM solicitudes_eventos se
         JOIN usuarios u ON se.usuario_id = u.id
         JOIN categorias_eventos ce ON se.categoria_id = ce.id
         WHERE se.estado = "Aprobado" AND se.privacidad = "Público"
         ORDER BY se.fecha_evento ASC
-        LIMIT 3
+        LIMIT 10
     ');
     
     $stmt->execute();
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        $fiestas_destacadas[] = $row;
+        $favoritos[] = $row;
     }
     
+    $total_favoritos = count($favoritos);
     $stmt->close();
     $conn->close();
+    
 } catch (Exception $e) {
-    // Si hay error, usar datos de ejemplo
-    $fiestas_destacadas = [
-        [
-            'id' => 1,
-            'titulo' => 'Fiesta de Cumpleaños 25',
-            'descripcion' => 'Celebración especial con música en vivo y buffet completo',
-            'ubicacion' => 'Salón La Casona, Asunción',
-            'fecha_evento' => '2024-12-15',
-            'hora_evento' => '20:00:00',
-            'capacidad' => 150,
-            'presupuesto' => 2000000,
-            'categoria_nombre' => 'Cumpleaños',
-            'categoria_icono' => 'fa-birthday-cake',
-            'categoria_color' => '#ff6b6b',
-            'organizador_nombre' => 'María González'
-        ],
-        [
-            'id' => 2,
-            'titulo' => 'Graduación Universidad',
-            'descripcion' => 'Ceremonia de graduación con cena de gala',
-            'ubicacion' => 'Centro de Convenciones, Asunción',
-            'fecha_evento' => '2024-12-20',
-            'hora_evento' => '19:00:00',
-            'capacidad' => 300,
-            'presupuesto' => 3500000,
-            'categoria_nombre' => 'Graduación',
-            'categoria_icono' => 'fa-graduation-cap',
-            'categoria_color' => '#54a0ff',
-            'organizador_nombre' => 'Carlos Rodríguez'
-        ],
-        [
-            'id' => 3,
-            'titulo' => 'Boda de Ana y Juan',
-            'descripcion' => 'Celebración de amor con ceremonia religiosa y recepción',
-            'ubicacion' => 'Hotel Gran Asunción',
-            'fecha_evento' => '2024-12-25',
-            'hora_evento' => '18:00:00',
-            'capacidad' => 200,
-            'presupuesto' => 5000000,
-            'categoria_nombre' => 'Boda',
-            'categoria_icono' => 'fa-heart',
-            'categoria_color' => '#ff9ff3',
-            'organizador_nombre' => 'Ana Martínez'
-        ]
-    ];
+    $error = 'Error al cargar favoritos: ' . $e->getMessage();
 }
 
 function formatearFecha($fecha) {
@@ -97,17 +68,92 @@ function formatearPresupuesto($presupuesto) {
     if (!$presupuesto) return 'No especificado';
     return 'Gs. ' . number_format($presupuesto, 0, ',', '.');
 }
+
+function obtenerClaseCategoria($categoria) {
+    switch ($categoria) {
+        case 'Cumpleaños': return 'categoria-cumpleanos';
+        case 'Boda': return 'categoria-boda';
+        case 'Graduación': return 'categoria-graduacion';
+        case 'Aniversario': return 'categoria-aniversario';
+        case 'Evento Corporativo': return 'categoria-corporativo';
+        case 'Fiesta Temática': return 'categoria-tematica';
+        case 'Baby Shower': return 'categoria-babyshower';
+        case 'Despedida': return 'categoria-despedida';
+        default: return 'categoria-otro';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tres Bloques</title>
+    <title>Mis Favoritos - PartyExpress</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <style>
-        .fiesta-card {
+        .favoritos-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .favoritos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .favoritos-title {
+            color: #a259f7;
+            font-size: 2rem;
+            margin: 0;
+        }
+        
+        .btn-volver {
+            background: rgba(162,89,247,0.2);
+            color: #a259f7;
+            border: 1px solid rgba(162,89,247,0.4);
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-volver:hover {
+            background: rgba(162,89,247,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .favoritos-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .favoritos-count {
+            color: #a259f7;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .favoritos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .favorito-card {
             background: rgba(255,255,255,0.05);
             border-radius: 20px;
             padding: 25px;
@@ -115,18 +161,14 @@ function formatearPresupuesto($presupuesto) {
             border: 1px solid rgba(162,89,247,0.2);
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             transition: all 0.3s ease;
-            cursor: pointer;
             position: relative;
             overflow: hidden;
             text-decoration: none;
             color: inherit;
             display: block;
-            min-height: 380px;
-            width: auto;
-            margin: 0;
         }
         
-        .fiesta-card::before {
+        .favorito-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -136,51 +178,98 @@ function formatearPresupuesto($presupuesto) {
             background: linear-gradient(90deg, #a259f7 60%, #7209b7 100%);
         }
         
-        .fiesta-card:hover {
+        .favorito-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 25px 70px rgba(0,0,0,0.4);
             border-color: #a259f7;
         }
         
-        .fiesta-header {
+        .favorito-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 15px;
         }
         
-        .fiesta-titulo {
+        .favorito-titulo {
             color: #a259f7;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: 600;
-            margin: 0 0 12px 0;
+            margin: 0;
             flex: 1;
-            line-height: 1.2;
         }
         
         .categoria-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
-            margin-left: 8px;
+            margin-left: 10px;
         }
         
-        .fiesta-descripcion {
+        .categoria-cumpleanos {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.4);
+        }
+        
+        .categoria-boda {
+            background: rgba(255, 159, 243, 0.2);
+            color: #ff9ff3;
+            border: 1px solid rgba(255, 159, 243, 0.4);
+        }
+        
+        .categoria-graduacion {
+            background: rgba(84, 160, 255, 0.2);
+            color: #54a0ff;
+            border: 1px solid rgba(84, 160, 255, 0.4);
+        }
+        
+        .categoria-aniversario {
+            background: rgba(95, 39, 205, 0.2);
+            color: #5f27cd;
+            border: 1px solid rgba(95, 39, 205, 0.4);
+        }
+        
+        .categoria-corporativo {
+            background: rgba(0, 210, 211, 0.2);
+            color: #00d2d3;
+            border: 1px solid rgba(0, 210, 211, 0.4);
+        }
+        
+        .categoria-tematica {
+            background: rgba(255, 159, 67, 0.2);
+            color: #ff9f43;
+            border: 1px solid rgba(255, 159, 67, 0.4);
+        }
+        
+        .categoria-babyshower {
+            background: rgba(165, 94, 234, 0.2);
+            color: #a55eea;
+            border: 1px solid rgba(165, 94, 234, 0.4);
+        }
+        
+        .categoria-despedida {
+            background: rgba(38, 222, 129, 0.2);
+            color: #26de81;
+            border: 1px solid rgba(38, 222, 129, 0.4);
+        }
+        
+        .categoria-otro {
+            background: rgba(162, 89, 247, 0.2);
+            color: #a259f7;
+            border: 1px solid rgba(162, 89, 247, 0.4);
+        }
+        
+        .favorito-descripcion {
             color: #ccc;
-            line-height: 1.4;
+            line-height: 1.6;
             margin-bottom: 20px;
-            font-size: 0.9rem;
-            min-height: 50px;
-            max-height: 70px;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+            font-size: 0.95rem;
         }
         
-        .fiesta-info {
+        .favorito-info {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
@@ -191,33 +280,31 @@ function formatearPresupuesto($presupuesto) {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.9rem;
         }
         
         .info-icon {
             color: #a259f7;
-            width: 16px;
+            width: 18px;
             text-align: center;
         }
         
         .info-label {
             color: #a259f7;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
         .info-value {
             color: #fff;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
-        .fiesta-footer {
+        .favorito-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 10px;
         }
         
         .organizador {
@@ -232,149 +319,85 @@ function formatearPresupuesto($presupuesto) {
         .fecha-evento {
             color: #28a745;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
         
         .ver-mas-btn {
             background: linear-gradient(90deg, #a259f7 60%, #7209b7 100%);
             color: white;
-            padding: 12px 20px;
+            padding: 8px 16px;
             border-radius: 20px;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             margin-top: 15px;
-            width: 100%;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(162,89,247,0.3);
         }
         
         .ver-mas-btn:hover {
-            background: linear-gradient(90deg, #7209b7 60%, #a259f7 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(162,89,247,0.4);
+            box-shadow: 0 10px 25px rgba(162,89,247,0.3);
+        }
+        
+        .sin-favoritos {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        
+        .sin-favoritos i {
+            font-size: 4rem;
+            color: #a259f7;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .sin-favoritos h3 {
+            color: #a259f7;
+            margin-bottom: 10px;
+        }
+        
+        .btn-explorar {
+            background: linear-gradient(90deg, #a259f7 60%, #7209b7 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .btn-explorar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(162,89,247,0.3);
         }
         
         @media (max-width: 768px) {
-            .fiesta-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .fiesta-footer {
+            .favoritos-info {
                 flex-direction: column;
                 align-items: stretch;
             }
-        }
-        
-        /* Estilos del Footer */
-        .footer-section {
-            background: rgba(45, 25, 80, 0.9);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(162,89,247,0.3);
-            padding: 40px 0 20px;
-            margin-top: 60px;
-        }
-        
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-        }
-        
-        .footer-section h3 {
-            color: #a259f7;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        
-        .footer-section p {
-            color: #ccc;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        
-        .footer-section ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .footer-section ul li {
-            margin-bottom: 8px;
-        }
-        
-        .footer-section ul li a {
-            color: #ccc;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-section ul li a:hover {
-            color: #a259f7;
-        }
-        
-        .redes-sociales {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .red-social {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ccc;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(162,89,247,0.2);
-        }
-        
-        .red-social:hover {
-            background: rgba(162,89,247,0.1);
-            color: #a259f7;
-            border-color: #a259f7;
-            transform: translateY(-2px);
-        }
-        
-        .red-social i {
-            font-size: 1.2rem;
-            color: #a259f7;
-        }
-        
-        .footer-bottom {
-            border-top: 1px solid rgba(162,89,247,0.2);
-            margin-top: 30px;
-            padding-top: 20px;
-            text-align: center;
-        }
-        
-        .footer-bottom p {
-            color: #888;
-            font-size: 0.9rem;
-            margin: 0;
-        }
-        
-        @media (max-width: 768px) {
-            .footer-content {
+            
+            .favoritos-grid {
                 grid-template-columns: 1fr;
-                text-align: center;
             }
-        }
-        .fiestas-lista {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-            margin-top: 30px;
+            
+            .favorito-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .favorito-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
@@ -452,7 +475,7 @@ function formatearPresupuesto($presupuesto) {
                                 <span class="menu-stat-label">Días</span>
                             </div>
                             <div class="menu-stat">
-                                <span class="menu-stat-number">5</span>
+                                <span class="menu-stat-number"><?php echo $total_favoritos; ?></span>
                                 <span class="menu-stat-label">Favoritos</span>
                             </div>
                         </div>
@@ -494,7 +517,7 @@ function formatearPresupuesto($presupuesto) {
                     </a>
                     <a href="favoritos.php" class="menu-item">
                         <i class="fa fa-heart"></i> Favoritos
-                        <span class="menu-item-badge">5</span>
+                        <span class="menu-item-badge"><?php echo $total_favoritos; ?></span>
                     </a>
                     <a href="configuracion.php" class="menu-item">
                         <i class="fa fa-cog"></i> Configuración
@@ -512,147 +535,106 @@ function formatearPresupuesto($presupuesto) {
             <?php endif; ?>
         </span>
     </nav>
-    
-    <section class="buscador-section">
-        <h1>Encuentra fiestas y lugares para celebrar</h1>
-        <form class="buscador-form" method="GET" action="buscar.php">
-            <input type="text" name="q" placeholder="Buscar fiestas, lugares o ciudades..." required>
-            <button type="submit">Buscar</button>
-        </form>
-    </section>
-    
-    <section class="categorias-section">
-        <h2>Categorías populares</h2>
-        <div class="categorias-lista">
-            <div class="categoria-card">Electrónica</div>
-            <div class="categoria-card">Bares</div>
-            <div class="categoria-card">Fiestas privadas</div>
-            <div class="categoria-card">Conciertos</div>
-            <div class="categoria-card">Salones de eventos</div>
+
+    <div class="favoritos-container">
+        <header class="favoritos-header">
+            <h1 class="favoritos-title">Mis Favoritos</h1>
+            <a href="index.php" class="btn-volver">
+                <i class="fa fa-home"></i> Volver al inicio
+            </a>
+        </header>
+
+        <div class="favoritos-info">
+            <div class="favoritos-count">
+                <?php if ($total_favoritos > 0): ?>
+                    Tienes <?php echo $total_favoritos; ?> evento<?php echo $total_favoritos !== 1 ? 's' : ''; ?> favorito<?php echo $total_favoritos !== 1 ? 's' : ''; ?>
+                <?php else: ?>
+                    No tienes favoritos aún
+                <?php endif; ?>
+            </div>
         </div>
-    </section>
-    
-    <section class="fiestas-section">
-        <h2>Lugares y fiestas destacados en Paraguay</h2>
-        <div class="fiestas-lista">
-            <?php if (empty($fiestas_destacadas)): ?>
-                <div style="text-align: center; padding: 40px; color: #888;">
-                    <i class="fa fa-calendar-times" style="font-size: 3rem; color: #a259f7; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h3 style="color: #a259f7; margin-bottom: 10px;">No hay fiestas destacadas</h3>
-                    <p>Las fiestas aparecerán aquí cuando sean aprobadas</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($fiestas_destacadas as $fiesta): ?>
-                    <a href="fiesta_detalle.php?id=<?php echo $fiesta['id']; ?>" class="fiesta-card">
-                        <div class="fiesta-header">
-                            <h3 class="fiesta-titulo"><?php echo htmlspecialchars($fiesta['titulo']); ?></h3>
-                            <span class="categoria-badge" style="background: rgba(<?php echo hex2rgb($fiesta['categoria_color']); ?>, 0.2); color: <?php echo $fiesta['categoria_color']; ?>; border: 1px solid rgba(<?php echo hex2rgb($fiesta['categoria_color']); ?>, 0.4);">
-                                <i class="fa <?php echo htmlspecialchars($fiesta['categoria_icono']); ?>"></i>
-                                <?php echo htmlspecialchars($fiesta['categoria_nombre']); ?>
+
+        <?php if ($total_favoritos > 0): ?>
+            <div class="favoritos-grid">
+                <?php foreach ($favoritos as $favorito): ?>
+                    <a href="fiesta_detalle.php?id=<?php echo $favorito['id']; ?>" class="favorito-card">
+                        <div class="favorito-header">
+                            <h3 class="favorito-titulo"><?php echo htmlspecialchars($favorito['titulo']); ?></h3>
+                            <span class="categoria-badge <?php echo obtenerClaseCategoria($favorito['categoria_nombre']); ?>">
+                                <i class="fa <?php echo htmlspecialchars($favorito['categoria_icono']); ?>"></i>
+                                <?php echo htmlspecialchars($favorito['categoria_nombre']); ?>
                             </span>
                         </div>
                         
-                        <p class="fiesta-descripcion"><?php echo htmlspecialchars($fiesta['descripcion']); ?></p>
+                        <p class="favorito-descripcion"><?php echo htmlspecialchars($favorito['descripcion']); ?></p>
                         
-                        <div class="fiesta-info">
+                        <div class="favorito-info">
                             <div class="info-item">
                                 <i class="fa fa-map-marker-alt info-icon"></i>
                                 <span class="info-label">Ubicación:</span>
-                                <span class="info-value"><?php echo htmlspecialchars($fiesta['ubicacion']); ?></span>
+                                <span class="info-value"><?php echo htmlspecialchars($favorito['ubicacion']); ?></span>
                             </div>
                             
                             <div class="info-item">
                                 <i class="fa fa-calendar info-icon"></i>
                                 <span class="info-label">Fecha:</span>
-                                <span class="info-value"><?php echo formatearFecha($fiesta['fecha_evento']); ?></span>
+                                <span class="info-value"><?php echo formatearFecha($favorito['fecha_evento']); ?></span>
                             </div>
                             
                             <div class="info-item">
                                 <i class="fa fa-clock info-icon"></i>
                                 <span class="info-label">Hora:</span>
-                                <span class="info-value"><?php echo formatearHora($fiesta['hora_evento']); ?></span>
+                                <span class="info-value"><?php echo formatearHora($favorito['hora_evento']); ?></span>
                             </div>
                             
-                            <?php if ($fiesta['capacidad']): ?>
+                            <?php if ($favorito['capacidad']): ?>
                             <div class="info-item">
                                 <i class="fa fa-users info-icon"></i>
                                 <span class="info-label">Capacidad:</span>
-                                <span class="info-value"><?php echo $fiesta['capacidad']; ?> personas</span>
+                                <span class="info-value"><?php echo $favorito['capacidad']; ?> personas</span>
                             </div>
                             <?php endif; ?>
                             
-                            <?php if ($fiesta['presupuesto']): ?>
+                            <?php if ($favorito['presupuesto']): ?>
                             <div class="info-item">
                                 <i class="fa fa-money-bill info-icon"></i>
                                 <span class="info-label">Presupuesto:</span>
-                                <span class="info-value"><?php echo formatearPresupuesto($fiesta['presupuesto']); ?></span>
+                                <span class="info-value"><?php echo formatearPresupuesto($favorito['presupuesto']); ?></span>
                             </div>
                             <?php endif; ?>
                         </div>
                         
-                        <div class="fiesta-footer">
+                        <div class="favorito-footer">
                             <div class="organizador">
-                                Organizado por <strong><?php echo htmlspecialchars($fiesta['organizador_nombre']); ?></strong>
+                                Organizado por: <strong><?php echo htmlspecialchars($favorito['organizador_nombre']); ?></strong>
                             </div>
+                            
                             <div class="fecha-evento">
-                                <?php echo formatearFecha($fiesta['fecha_evento']); ?>
+                                <i class="fa fa-calendar-check"></i>
+                                <?php echo formatearFecha($favorito['fecha_evento']); ?>
                             </div>
-                            <div class="ver-mas-btn">
-                                <i class="fa fa-eye"></i>
-                                Ver detalles
-                            </div>
+                        </div>
+                        
+                        <div class="ver-mas-btn">
+                            <i class="fa fa-eye"></i>
+                            Ver detalles
                         </div>
                     </a>
                 <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-    </section>
-    
-    <section class="organiza-section">
-        <?php if (isset($_SESSION['usuario_id'])): ?>
-            <a href="organizar.php" class="organiza-btn">+ Organiza tu propia fiesta</a>
+            </div>
         <?php else: ?>
-            <a href="login.html?redirect=<?php echo urlencode('organizar.php'); ?>" class="organiza-btn">+ Organiza tu propia fiesta</a>
+            <div class="sin-favoritos">
+                <i class="fa fa-heart"></i>
+                <h3>No tienes favoritos aún</h3>
+                <p>Explora eventos y agrega tus favoritos para verlos aquí</p>
+                <a href="index.php" class="btn-explorar">
+                    <i class="fa fa-search"></i>
+                    Explorar eventos
+                </a>
+            </div>
         <?php endif; ?>
-    </section>
-    
-    <footer class="footer-section">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>PartyExpress</h3>
-                <p>Tu plataforma para organizar y encontrar los mejores eventos en Paraguay</p>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Enlaces Rápidos</h3>
-                <ul>
-                    <li><a href="fiestas.php">Fiestas</a></li>
-                    <li><a href="lugares.php">Lugares</a></li>
-                    <li><a href="organizar.php">Organizar Evento</a></li>
-                    <li><a href="contacto.php">Contacto</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Síguenos</h3>
-                <div class="redes-sociales">
-                    <a href="https://www.facebook.com/partyexpress.py" target="_blank" class="red-social">
-                        <i class="fab fa-facebook-f"></i>
-                        <span>@partyexpress.py</span>
-                    </a>
-                    <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" target="_blank" class="red-social">
-                        <i class="fab fa-instagram"></i>
-                        <span>@partyexpress_py</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="footer-bottom">
-            <p>&copy; 2024 PartyExpress. Todos los derechos reservados.</p>
-        </div>
-    </footer>
-    
+    </div>
+
     <script>
         const menuToggle = document.getElementById("menuToggle");
         const dropdownMenu = document.getElementById("dropdownMenu");
@@ -691,24 +673,6 @@ function formatearPresupuesto($presupuesto) {
                 }
             });
         }
-
-
     </script>
 </body>
 </html>
-
-<?php
-function hex2rgb($hex) {
-    $hex = str_replace('#', '', $hex);
-    if (strlen($hex) == 3) {
-        $r = hexdec(substr($hex,0,1).substr($hex,0,1));
-        $g = hexdec(substr($hex,1,1).substr($hex,1,1));
-        $b = hexdec(substr($hex,2,1).substr($hex,2,1));
-    } else {
-        $r = hexdec(substr($hex,0,2));
-        $g = hexdec(substr($hex,2,2));
-        $b = hexdec(substr($hex,4,2));
-    }
-    return "$r, $g, $b";
-}
-?> 

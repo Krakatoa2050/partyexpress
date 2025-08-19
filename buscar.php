@@ -653,18 +653,118 @@ function obtenerClaseCategoria($categoria) {
         </ul>
         <span class="usuario-menu-container">
             <?php if (isset($_SESSION['usuario'])): ?>
-                <span style="color:#fff;">Bienvenido, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
+                <div class="usuario-bienvenida">
+                    <div class="usuario-avatar">
+                        <?php 
+                        // Obtener foto de perfil del usuario
+                        $foto_perfil = null;
+                        try {
+                            $conn = obtenerConexion();
+                            $stmt = $conn->prepare('SELECT foto_perfil FROM usuarios WHERE id = ?');
+                            $stmt->bind_param('i', $_SESSION['usuario_id']);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            if ($result->num_rows > 0) {
+                                $foto_perfil = $result->fetch_assoc()['foto_perfil'];
+                            }
+                            $stmt->close();
+                            $conn->close();
+                        } catch (Exception $e) {
+                            // Silenciar errores
+                        }
+                        
+                        if ($foto_perfil): ?>
+                            <img src="uploads/perfiles/<?php echo htmlspecialchars($foto_perfil); ?>" alt="Foto de perfil">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($_SESSION['usuario'], 0, 1)); ?>
+                        <?php endif; ?>
+                    </div>
+                    <span>Hola, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
+                </div>
                 <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
                 </button>
                 <div class="dropdown-menu" id="dropdownMenu">
+                    <!-- Header con información del usuario -->
+                    <div class="menu-header">
+                        <div class="menu-user-info">
+                            <div class="menu-user-avatar">
+                                <?php if ($foto_perfil): ?>
+                                    <img src="uploads/perfiles/<?php echo htmlspecialchars($foto_perfil); ?>" alt="Foto de perfil">
+                                <?php else: ?>
+                                    <?php echo strtoupper(substr($_SESSION['usuario'], 0, 1)); ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="menu-user-details">
+                                <h4><?php echo htmlspecialchars($_SESSION['nombre'] ?? $_SESSION['usuario']); ?></h4>
+                                <p><?php echo htmlspecialchars($_SESSION['usuario']); ?></p>
+                            </div>
+                        </div>
+                        <div class="menu-stats">
+                            <div class="menu-stat">
+                                <span class="menu-stat-number">3</span>
+                                <span class="menu-stat-label">Eventos</span>
+                            </div>
+                            <div class="menu-stat">
+                                <span class="menu-stat-number">12</span>
+                                <span class="menu-stat-label">Días</span>
+                            </div>
+                            <div class="menu-stat">
+                                <span class="menu-stat-number">5</span>
+                                <span class="menu-stat-label">Favoritos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de notificaciones -->
+                    <div class="menu-notifications">
+                        <div class="menu-notifications-header">
+                            <h5 class="menu-notifications-title">Notificaciones</h5>
+                            <div class="notification-badge">2</div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="fa fa-bell"></i>
+                            </div>
+                            <div class="notification-content">
+                                <h5>Nueva solicitud aprobada</h5>
+                                <p>Tu evento "Fiesta de Cumpleaños" fue aprobado</p>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="fa fa-heart"></i>
+                            </div>
+                            <div class="notification-content">
+                                <h5>Nuevo lugar disponible</h5>
+                                <p>Parque Acuático Aqualandia ahora disponible</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enlaces del menú -->
                     <a href="mis_solicitudes.php" class="menu-item">
                         <i class="fa fa-calendar-check"></i> Mis Solicitudes
+                        <span class="menu-item-badge">3</span>
                     </a>
+                    <a href="perfil.php" class="menu-item">
+                        <i class="fa fa-user"></i> Mi Perfil
+                    </a>
+                    <a href="favoritos.php" class="menu-item">
+                        <i class="fa fa-heart"></i> Favoritos
+                        <span class="menu-item-badge">5</span>
+                    </a>
+                    <a href="configuracion.php" class="menu-item">
+                        <i class="fa fa-cog"></i> Configuración
+                    </a>
+                    
+                    <!-- Botón de cerrar sesión -->
                     <form method="POST" action="logout.php" style="margin:0;">
-                        <button type="submit" class="logout-btn">Cerrar sesión</button>
+                        <button type="submit" class="logout-btn">
+                            <i class="fa fa-sign-out-alt"></i> Cerrar sesión
+                        </button>
                     </form>
                 </div>
             <?php else: ?>
@@ -840,6 +940,10 @@ function obtenerClaseCategoria($categoria) {
             <div class="footer-section">
                 <h3>Síguenos</h3>
                 <div class="redes-sociales">
+                    <a href="https://www.facebook.com/partyexpress.py" target="_blank" class="red-social">
+                        <i class="fab fa-facebook-f"></i>
+                        <span>@partyexpress.py</span>
+                    </a>
                     <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" target="_blank" class="red-social">
                         <i class="fab fa-instagram"></i>
                         <span>@partyexpress_py</span>
@@ -861,11 +965,33 @@ function obtenerClaseCategoria($categoria) {
             menuToggle.onclick = function(e) {
                 e.stopPropagation();
                 dropdownMenu.classList.toggle('show');
+                menuToggle.classList.toggle('active');
             };
             
             document.addEventListener('click', function(e) {
                 if (!dropdownMenu.contains(e.target) && !menuToggle.contains(e.target)) {
                     dropdownMenu.classList.remove('show');
+                    menuToggle.classList.remove('active');
+                }
+            });
+
+            // Cerrar menú con tecla Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
+                    dropdownMenu.classList.remove('show');
+                    menuToggle.classList.remove('active');
+                }
+            });
+
+            // Animación suave al hacer scroll
+            let scrollTimeout;
+            window.addEventListener('scroll', function() {
+                if (dropdownMenu.classList.contains('show')) {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(function() {
+                        dropdownMenu.classList.remove('show');
+                        menuToggle.classList.remove('active');
+                    }, 100);
                 }
             });
         }

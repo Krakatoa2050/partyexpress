@@ -690,6 +690,10 @@ function obtenerClaseCategoria($categoria) {
             <div class="footer-section">
                 <h3>Síguenos</h3>
                 <div class="redes-sociales">
+                    <a href="https://www.facebook.com/partyexpress.py" target="_blank" class="red-social">
+                        <i class="fab fa-facebook-f"></i>
+                        <span>@partyexpress.py</span>
+                    </a>
                     <a href="https://www.instagram.com/partyexpress_py?utm_source=ig_web_button_share_sheet&igsh=MXF6dWcydmt0dTFuNA==" target="_blank" class="red-social">
                         <i class="fab fa-instagram"></i>
                         <span>@partyexpress_py</span>

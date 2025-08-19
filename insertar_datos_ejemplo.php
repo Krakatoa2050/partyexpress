@@ -242,9 +242,9 @@ body {
 
 h1, h2 {
     color: #a259f7;
-}
+}   
 
 a {
     color: #a259f7;
 }
-</style> 
+</style>            
